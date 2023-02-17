@@ -97,3 +97,26 @@ def update_variants_quantity(variants_dict,
         time.sleep(1)
 
     print('update_variants_quantity procedure completed')
+
+
+def update_prices(variants_dict):
+
+    variants_dict_with_price_diff = {k: v for k, v in variants_dict.items() if v['s_price'] != v['t_price']}
+
+    if not variants_dict_with_price_diff:
+        print('There are not price differences')
+        return None
+
+    print(f'{len(variants_dict_with_price_diff)} price differences are found')
+
+    for t_var_id, v in variants_dict_with_price_diff.items():
+        print(v)
+        json_data = {
+            'variant': {'id': t_var_id, 'price': v['s_price']},
+        }
+
+        response = requests.put(f'{url}variants/{t_var_id}.json', json=json_data)
+        print(f'{t_var_id} - {v["s_price"]} - {response.status_code}')
+
+    print('update_variants_quantity procedure completed')
+

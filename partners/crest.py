@@ -9,6 +9,7 @@ def update_crest():
 
     variants_dict = get_variants_dict(partners_items_dict, our_shop_product_list)
 
-    update_variants_quantity(variants_dict)
+    # update_variants_quantity(variants_dict)
+    update_prices(variants_dict)
 
     return True
