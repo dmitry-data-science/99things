@@ -85,10 +85,15 @@ def update_variants_quantity(variants_dict,
         available = get_inventory_level(inv_id)[0]['available'] or 0
         desired_value = available_variant_quantity if variants_dict[inv_id]['s_available'] else 0
 
+        quantity_diff = desired_value - available
+
+        if not quantity_diff:
+            continue
+
         params = {
             'inventory_item_id': inv_id,
             'location_id': location_id,
-            'available_adjustment': desired_value - available
+            'available_adjustment': quantity_diff
         }
 
         response = requests.post(f'{url}inventory_levels/adjust.json', json=params)
