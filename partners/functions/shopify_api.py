@@ -36,6 +36,16 @@ def get_inventory_level(inventory_item_id, location_id=location_id):
     return response.json()['inventory_levels']
 
 
+def var_params_updating(var_id, params_dict):
+    json_data = {
+        'variant': {'id': var_id, **params_dict},
+    }
+    response = requests.put(f'{url}variants/{var_id}.json', json=json_data)
+    print(response.status_code)
+
+    return response
+
+
 # form a dictionary. Key is a variant_id from our shop, value is a variant_id form partners shop
 # plus availability - the data from a partners website
 def get_variants_dict(partners_items_dict, our_shop_product_list):
@@ -89,12 +99,15 @@ def update_variants_quantity(variants_dict,
         available = get_inventory_level(inv_id)[0]['available'] or 0
         desired_value = available_variant_quantity if variants_dict[inv_id]['s_available'] else 0
 
-        quantity_diff = desired_value - variants_dict[inv_id]['inventory_quantity']
+        quantity_diff = desired_value - available
 
         if not quantity_diff:
             continue
 
-        print(f'{inv_id} : {quantity_diff}')
+        var_params_updating(variants_dict[inv_id]['t_var_id'], {'inventory_management': 'shopify'})
+
+
+        print(f'{inv_id} : {quantity_diff} - {variants_dict[inv_id]}')
 
         params = {
             'inventory_item_id': inv_id,
