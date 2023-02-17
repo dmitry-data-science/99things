@@ -160,3 +160,12 @@ def update_prices(variants_dict):
 
     print('update_variants_quantity procedure completed')
 
+
+def update_prod_visibility(vendor):
+    our_shop_product_list = get_prod_list(vendor)
+
+    prod_list_for_visability = (
+        {prod['id']:
+             any([v['inventory_quantity'] for v in prod['variants']])  # if any variants available
+         for prod in products
+         if prod['status'] != 'draft'})  # product is not draft
