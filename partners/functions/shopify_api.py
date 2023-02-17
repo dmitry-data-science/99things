@@ -33,6 +33,7 @@ def get_inventory_level(inventory_item_id, location_id=location_id):
         params=params,
     )
 
+    print(f'inventory: {inventory_item_id} - {response.text}')
     return response.json()['inventory_levels']
 
 
