@@ -37,6 +37,20 @@ def get_inventory_level(inventory_item_id, location_id=location_id):
     return response.json()['inventory_levels']
 
 
+def prod_params_updating(prod_id, params_dict):
+    json_data = {
+        'product': {
+            'id': prod_id,
+            **params_dict
+        },
+    }
+
+    response = requests.put(f'{url}products/{prod_id}.json', json=json_data)
+    print(response.status_code)
+
+    return response
+
+
 def var_params_updating(var_id, params_dict):
     json_data = {
         'variant': {'id': var_id, **params_dict},
