@@ -58,19 +58,23 @@ def get_variants_dict(partners_items_dict, our_shop_product_list):
         target_variants.extend([(item['handle'],
                                  v['title'],
                                  v['inventory_item_id'],
-                                 float(v['price']) # shopify thing that a price is string :-)
+                                 v['id'],
+                                 float(v['price']),  # shopify thing that a price is string :-)
+                                 v['inventory_quantity'],
                                  ) for v in item['variants']])
 
     variants_dict = dict()
 
     # join both of our lists
-    for t_prod_handle, t_var_title, t_var_id, t_price in target_variants:
+    for t_prod_handle, t_var_title, t_inv_id, t_var_id, t_price, inventory_quantity in target_variants:
         for s_prod_handle, s_var_title, s_var_id, s_available, s_price in source_variants:
             if all((t_prod_handle == s_prod_handle, t_var_title == s_var_title)):
-                variants_dict[t_var_id] = {'s_var_id': s_var_id, # variant_id of partners item
-                                           's_available': s_available, # is the partners item available?
-                                           's_price': s_price, # partners variant price
-                                           't_price': t_price, # our variant price
+                variants_dict[t_inv_id] = {'s_var_id': s_var_id,  # variant_id of partners item
+                                           's_available': s_available,  # is the partners item available?
+                                           's_price': s_price,  # partners variant price
+                                           't_price': t_price,  # our variant price
+                                           't_var_id': t_var_id,
+                                           'inventory_quantity': inventory_quantity,
                                            }
                 break
 
@@ -85,10 +89,12 @@ def update_variants_quantity(variants_dict,
         available = get_inventory_level(inv_id)[0]['available'] or 0
         desired_value = available_variant_quantity if variants_dict[inv_id]['s_available'] else 0
 
-        quantity_diff = desired_value - available
+        quantity_diff = desired_value - variants_dict[inv_id]['inventory_quantity']
 
         if not quantity_diff:
             continue
+
+        print(f'{inv_id} : {quantity_diff}')
 
         params = {
             'inventory_item_id': inv_id,
@@ -114,14 +120,14 @@ def update_prices(variants_dict):
 
     print(f'{len(variants_dict_with_price_diff)} price differences are found')
 
-    for t_var_id, v in variants_dict_with_price_diff.items():
+    for v in variants_dict_with_price_diff.values():
         print(v)
         json_data = {
-            'variant': {'id': t_var_id, 'price': v['s_price']},
+            'variant': {'id': v['t_var_id'], 'price': v['s_price']},
         }
 
-        response = requests.put(f'{url}variants/{t_var_id}.json', json=json_data)
-        print(f'{t_var_id} - {v["s_price"]} - {response.status_code}')
+        response = requests.put(f'{url}variants/{v["t_var_id"]}.json', json=json_data)
+        print(f'{v["t_var_id"]} - {v["s_price"]} - {response.status_code}')
 
     print('update_variants_quantity procedure completed')
 
