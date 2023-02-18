@@ -166,6 +166,23 @@ def update_prod_visibility(vendor):
 
     prod_list_for_visability = (
         {prod['id']:
-             any([v['inventory_quantity'] for v in prod['variants']])  # if any variants available
-         for prod in products
+             (
+                 'active' if any([v['inventory_quantity'] for v in prod['variants']]) else 'archived',   # if any variants available
+                 prod['status']  # if active - True, if archived - False
+             )
+         for prod in our_shop_product_list
          if prod['status'] != 'draft'})  # product is not draft
+
+    prod_list_for_change = {prod_id: status
+                            for prod_id, status
+                            in prod_list_for_visability.items()
+                            if status[0] != status[1]}
+
+    if prod_list_for_change:
+        print(f'{len(prod_list_for_change)} products for statusupdating')
+
+        for prod_id, status in  prod_list_for_change.items():
+            prod_params_updating(prod_id, {'status': status[0]})
+            print(f'Status of {prod_id} is changed for {status[0]}')
+
+    print('All changes are done')
