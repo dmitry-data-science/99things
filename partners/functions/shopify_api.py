@@ -65,8 +65,8 @@ def var_params_updating(var_id, params_dict):
 # plus availability - the data from a partners website
 def get_variants_dict(partners_items_dict, our_shop_product_list):
 
-    source_variants = list() # variants from partners website
-    target_variants = list() # variants from our website
+    source_variants = list()  # variants from partners website
+    target_variants = list()  # variants from our website
 
     # form a source list - the data from partners website
     for item in [card['card']['item_card'] for card in partners_items_dict.values()]:
@@ -74,7 +74,8 @@ def get_variants_dict(partners_items_dict, our_shop_product_list):
                                  v['title'],
                                  v['id'],
                                  v['available'],
-                                 v['price'] / 100 # shopify add two extra characters for cents
+                                 v['price'] / 100,  # shopify add two extra characters for cents
+                                 v['compare_at_price'] / 100 if v['compare_at_price'] is not None else None,  # shopify add two extra characters for cents
                                  ) for v in item['variants']])
 
     # form a target list - the data from our website
@@ -85,19 +86,33 @@ def get_variants_dict(partners_items_dict, our_shop_product_list):
                                  v['inventory_item_id'],
                                  v['id'],
                                  float(v['price']),  # shopify thing that a price is string :-)
+                                 float(v['compare_at_price']) if v['compare_at_price'] is not None else None,
                                  v['inventory_quantity'],
                                  ) for v in item['variants']])
 
     variants_dict = dict()
 
     # join both of our lists
-    for t_prod_handle, t_var_title, t_inv_id, t_var_id, t_price, inventory_quantity in target_variants:
-        for s_prod_handle, s_var_title, s_var_id, s_available, s_price in source_variants:
+    for (t_prod_handle,
+         t_var_title,
+         t_inv_id,
+         t_var_id,
+         t_price,
+         t_compare_at_price,
+         inventory_quantity) in target_variants:
+        for (s_prod_handle,
+             s_var_title,
+             s_var_id,
+             s_available,
+             s_price,
+             s_compare_at_price) in source_variants:
             if all((t_prod_handle == s_prod_handle, t_var_title == s_var_title)):
                 variants_dict[t_inv_id] = {'s_var_id': s_var_id,  # variant_id of partners item
                                            's_available': s_available,  # is the partners item available?
                                            's_price': s_price,  # partners variant price
                                            't_price': t_price,  # our variant price
+                                           's_compare_at_price': s_compare_at_price,  # partners variant price
+                                           't_compare_at_price': t_compare_at_price,  # our variant price
                                            't_var_id': t_var_id,
                                            'inventory_quantity': inventory_quantity,
                                            }
@@ -140,8 +155,24 @@ def update_variants_quantity(variants_dict,
 
 
 def update_prices(variants_dict):
+    variants_dict_with_price_diff = dict()
 
-    variants_dict_with_price_diff = {k: v for k, v in variants_dict.items() if v['s_price'] != v['t_price']}
+    for k, v in variants_dict.items():
+        if ((v['s_price'] != v['t_price'])  # price change
+                # check to compare_at_price changing
+            | (all([v['s_compare_at_price'], v['t_compare_at_price']])
+               & (v['s_compare_at_price'] != v['t_compare_at_price']))  # both are not None and not equal
+
+            | ((v['s_compare_at_price'] is None) & (v['t_compare_at_price'] is not None)
+                | (v['s_compare_at_price'] is not None) & (v['t_compare_at_price'] is None)  # only one of them is equal None
+                )
+        ):
+            variants_dict_with_price_diff[k] = v
+
+    # variants_dict_with_price_diff = {k: v
+    #                                  for k, v
+    #                                  in variants_dict.items()
+    #                                  if (v['s_price'] != v['t_price']) | (v['s_compare_at_price'] != v['t_compare_at_price'])}
 
     if not variants_dict_with_price_diff:
         print('There are not price differences')
@@ -152,11 +183,12 @@ def update_prices(variants_dict):
     for v in variants_dict_with_price_diff.values():
         print(v)
         json_data = {
-            'variant': {'id': v['t_var_id'], 'price': v['s_price']},
+            'variant': {'id': v['t_var_id'], 'price': v['s_price'], 'compare_at_price': v['s_compare_at_price']},
         }
 
         response = requests.put(f'{url}variants/{v["t_var_id"]}.json', json=json_data)
         print(f'{v["t_var_id"]} - {v["s_price"]} - {response.status_code}')
+        print(json_data)
 
     print('update_variants_quantity procedure completed')
 
@@ -186,3 +218,12 @@ def update_prod_visibility(vendor):
             print(f'Status of {prod_id} is changed for {status[0]}')
 
     print('All changes are done')
+
+
+def get_new_items(partners_items_dict, our_shop_product_list):
+    ...
+
+
+def add_new_items_to_site(partners_new_items_dict):
+    ...
+

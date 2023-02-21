@@ -110,3 +110,43 @@ def scrapy_main():
         }
 
     return items_dict
+
+
+def get_redirect_name(source_handle):
+
+    response = requests.get(f'https://99things.eu/products/{source_handle}')
+    soup = BeautifulSoup(response.text, parser='html')
+
+    new_handle = json.loads(
+        soup.find(name='script', attrs={'type': "application/ld+json"})
+            .decode_contents()
+            .replace('\r', '')
+            .replace('\n', '')
+    )['url'].split('/')[-1]
+
+    return new_handle
+
+
+def source_target_matching_for_handler(partners_items_dict, our_shop_product_list):
+    handles_in_source = {item['card']['item_card']['handle'] for item in list(partners_items_dict.values())}
+    handles_in_target = {prod['handle'] for prod in our_shop_product_list}
+
+    handles_dict = {handle: handle for handle in handles_in_source & handles_in_target}
+    new_items_handles = list()
+
+    for handle in handles_in_source.difference(handles_in_target):
+
+        redirect_name = get_redirect_name(handle)
+
+        if redirect_name == '404':
+            new_items_handles.append(handle)
+        else:
+            handles_dict[handle] = redirect_name
+
+    handles_dict = {v: k for k, v in handles_dict.items()}
+
+
+
+def update_items_dict(new_items):
+    ...
+
