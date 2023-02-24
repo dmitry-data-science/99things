@@ -1,4 +1,4 @@
-from partners.functions.crest_scrapy import scrapy_main, source_target_matching_for_handler, update_items_dict
+from partners.functions.crest_scrapy import scrapy_main, update_items_dict
 from partners.functions.shopify_api import *
 
 vendor = 'CREST'
