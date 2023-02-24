@@ -198,7 +198,12 @@ def update_items_dict(new_items):  # for another languages
         handle = new_items[k]['handle']
         new_description = get_english_description(handle)
         new_items[k]['description'] = new_description
+        new_items[k]['body_html'] = new_description
         new_items[k]['status'] = 'draft'  # all new products should be added as DRAFT
+        new_items[k]['vendor'] = 'CREST'  # name of vendor
+
+        del new_items[k]['options']
+
 
     return new_items
 

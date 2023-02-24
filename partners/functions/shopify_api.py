@@ -1,5 +1,6 @@
 import requests
 import time
+import base64
 
 from partners.functions.credentials import get_credentials
 
@@ -245,6 +246,35 @@ def get_new_items(partners_items_dict, our_shop_product_list):
     return new_items
 
 
-def add_new_items_to_site(partners_new_items_dict):
-    ...
+def get_image(image):
+    name = image.split('?')[0].split('/')[-1]
+    image_bytes = base64.b64encode(requests.get('https:' + image).content).decode()
+
+    return image_bytes, name
+
+
+def add_new_items_to_site(partners_new_items_dict, endpoint='products.json'):
+
+    for cur_product in partners_new_items_dict.values():
+
+        response_product = requests.post(url + endpoint, json={'product': cur_product})
+        if response_product.ok:
+            print(response_product.json()['product']['handle'], 'is created')
+        else:
+            print('Error with creation of ', cur_product['handle'])
+            #         break
+            continue
+
+        prod_id = response_product.json()['product']['id']
+
+        for image in cur_product['images']:
+            image_bytes, name = get_image(image)
+
+            json_data = {
+                'image': {
+                    'attachment': image_bytes,
+                    'filename': name,
+                },
+            }
+            print('add image', requests.post(f'{url}products/{prod_id}/images.json', json=json_data))
 
