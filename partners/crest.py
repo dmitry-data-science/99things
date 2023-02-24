@@ -16,7 +16,7 @@ def update_crest():
 
     update_variants_quantity(variants_dict)
     update_prices(variants_dict)
-    update_prod_visibility(vendor)
+    update_prod_visibility(vendor, partners_items_dict)
 
     # new_items = get_new_items(partners_items_dict, our_shop_product_list_replaced)
     # partners_new_items_dict = update_items_dict(new_items)

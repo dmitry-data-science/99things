@@ -193,7 +193,7 @@ def update_prices(variants_dict):
     print('update_variants_quantity procedure completed')
 
 
-def update_prod_visibility(vendor):
+def update_prod_visibility(vendor, partners_items_dict):
     our_shop_product_list = get_prod_list(vendor)
 
     prod_list_for_visability = (
@@ -205,13 +205,27 @@ def update_prod_visibility(vendor):
          for prod in our_shop_product_list
          if prod['status'] != 'draft'})  # product is not draft
 
+    # list (dict) of unavailable products
     prod_list_for_change = {prod_id: status
                             for prod_id, status
                             in prod_list_for_visability.items()
                             if status[0] != status[1]}
 
+
+    # list (dict) of product which is absent on the partners website
+    # handles set of absent products
+    handles_in_source = {item['card']['item_card']['handle'] for item in list(partners_items_dict.values())}
+    handles_in_target = {prod['handle'] for prod in our_shop_product_list if prod['status'] != 'archived'}
+    absent_handles_set = handles_in_target.difference(handles_in_source)
+    # absent products dictionary. Product_id: 'archived'
+    absent_products_dict = {prod['id']: 'archived' for prod in our_shop_product_list if prod['handle'] in absent_handles_set}
+
+    # updating prod_list_for_change with absent_products_dict
+    prod_list_for_change = {**prod_list_for_change, **absent_products_dict}
+
+
     if prod_list_for_change:
-        print(f'{len(prod_list_for_change)} products for statusupdating')
+        print(f'{len(prod_list_for_change)} products for status updating')
 
         for prod_id, status in  prod_list_for_change.items():
             prod_params_updating(prod_id, {'status': status[0]})
