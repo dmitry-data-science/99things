@@ -1,7 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import base64
+
+from selenium import webdriver
+import time
 
 dns = 'https://crestclothing.com'
 
@@ -112,41 +114,92 @@ def scrapy_main():
     return items_dict
 
 
-def get_redirect_name(source_handle):
-
-    response = requests.get(f'https://99things.eu/products/{source_handle}')
-    soup = BeautifulSoup(response.text, parser='html')
-
-    new_handle = json.loads(
-        soup.find(name='script', attrs={'type': "application/ld+json"})
-            .decode_contents()
-            .replace('\r', '')
-            .replace('\n', '')
-    )['url'].split('/')[-1]
-
-    return new_handle
-
-
-def source_target_matching_for_handler(partners_items_dict, our_shop_product_list):
-    handles_in_source = {item['card']['item_card']['handle'] for item in list(partners_items_dict.values())}
-    handles_in_target = {prod['handle'] for prod in our_shop_product_list}
-
-    handles_dict = {handle: handle for handle in handles_in_source & handles_in_target}
-    new_items_handles = list()
-
-    for handle in handles_in_source.difference(handles_in_target):
-
-        redirect_name = get_redirect_name(handle)
-
-        if redirect_name == '404':
-            new_items_handles.append(handle)
-        else:
-            handles_dict[handle] = redirect_name
-
-    handles_dict = {v: k for k, v in handles_dict.items()}
+# def get_redirect_name(source_handle):
+#
+#     response = requests.get(f'https://99things.eu/products/{source_handle}')
+#     soup = BeautifulSoup(response.text, parser='html')
+#
+#     new_handle = json.loads(
+#         soup.find(name='script', attrs={'type': "application/ld+json"})
+#             .decode_contents()
+#             .replace('\r', '')
+#             .replace('\n', '')
+#     )['url'].split('/')[-1]
+#
+#     return new_handle
 
 
+# def source_target_matching_for_handler(partners_items_dict, our_shop_product_list):
+#     handles_in_source = {item['card']['item_card']['handle'] for item in list(partners_items_dict.values())}
+#     handles_in_target = {prod['handle'] for prod in our_shop_product_list}
+#
+#     handles_dict = {handle: handle for handle in handles_in_source & handles_in_target}
+#     new_items_handles = list()
+#
+#     for handle in handles_in_source.difference(handles_in_target):
+#
+#         redirect_name = get_redirect_name(handle)
+#
+#         if redirect_name == '404':
+#             new_items_handles.append(handle)
+#         else:
+#             handles_dict[handle] = redirect_name
+#
+#     handles_dict = {v: k for k, v in handles_dict.items()}
 
-def update_items_dict(new_items):
-    ...
+
+
+# SELENIUM
+
+def get_options():
+    options = webdriver.ChromeOptions()
+    options.add_argument(
+        'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36')
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    # options.headless = True
+    # options.add_argument('--headless')
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
+    return options
+
+
+def get_english_description(handle):
+    new_description = str()
+
+    try:
+        browser = webdriver.Chrome(executable_path='C:\\Windows\\System32\\chromedriver.exe', options=get_options())
+
+        print('Browser is opened')
+
+        browser.get(f'{dns}/collections/all/products/{handle}')
+        time.sleep(5)
+        source = browser.page_source
+
+        soup = BeautifulSoup(source, 'html.parser')
+        item_card = soup.find(name='div', attrs={'class', 'product-single__meta'})
+        new_description = item_card.find(name='div', attrs={'class': 'product-single__description'}).decode_contents()
+
+
+    except:
+        print(f'selenium error with {handle}')
+
+    finally:
+        browser.close()
+        print('Browser is closed')
+
+    return new_description
+
+
+def update_items_dict(new_items):  # for another languages
+
+    for k in new_items.keys():
+
+        handle = new_items[k]['handle']
+        new_description = get_english_description(handle)
+        new_items[k]['description'] = new_description
+        new_items[k]['status'] = 'draft'  # all new products should be added as DRAFT
+
+    return new_items
+
 

@@ -235,7 +235,14 @@ def update_prod_visibility(vendor, partners_items_dict):
 
 
 def get_new_items(partners_items_dict, our_shop_product_list):
-    ...
+    handles_in_source = {item['card']['item_card']['handle'] for item in list(partners_items_dict.values())}
+    handles_in_target = {prod['handle'] for prod in our_shop_product_list if prod['status'] != 'archived'}
+
+    new_items_handles = handles_in_source.difference(handles_in_target)
+
+    new_items = {k: v for k, v in partners_items_dict.items() if v['handle'] in new_items_handles}
+
+    return new_items
 
 
 def add_new_items_to_site(partners_new_items_dict):
