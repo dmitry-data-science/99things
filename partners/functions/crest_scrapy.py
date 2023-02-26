@@ -86,6 +86,38 @@ def get_data_from_card(soup):
             'params': get_params(item_card)
             }
 
+
+# prices has 2 additional zeros. We remove them
+def fix_price_to_items_dict(items_dict):
+    items_dict_fixed_prices = dict()
+
+    for k, v in items_dict.items():
+        v_fixed = v.copy()
+
+        if 'variants' not in v['card']['item_card'].keys():
+            print('variants is not in keys')
+            items_dict_fixed_prices[k] = v_fixed
+            continue
+
+        # fix the product prices
+        for prod_key in v['card']['item_card'].keys():
+
+            if ('price' in prod_key) & (isinstance(v_fixed['card']['item_card'][prod_key], int)):
+                v_fixed['card']['item_card'][prod_key] /= 100
+
+        # fix the variants prices
+        for i, variants in enumerate(v['card']['item_card']['variants']):
+
+            for var_key in v['card']['item_card']['variants'][i].keys():
+
+                if ('price' in var_key) & (isinstance(v_fixed['card']['item_card']['variants'][i][var_key], int)):
+                    v_fixed['card']['item_card']['variants'][i][var_key] /= 100
+
+        items_dict_fixed_prices[k] = v
+
+    return items_dict_fixed_prices
+
+
 def scrapy_main():
     items_list = (get_soup('/collections/all')
                   .find(name='div', attrs={'class': 'grid-uniform'})
@@ -110,6 +142,8 @@ def scrapy_main():
                 )
             )
         }
+
+    items_dict = fix_price_to_items_dict(items_dict)
 
     return items_dict
 
