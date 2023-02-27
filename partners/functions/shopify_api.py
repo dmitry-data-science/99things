@@ -199,7 +199,6 @@ def update_prod_visibility(vendor, partners_items_dict):
 
     prod_list_for_visability = (
         {prod['id']:
-            # 'active' if any([v['inventory_quantity'] for v in prod['variants']]) else 'archived'   # if any variants available
             (
                  'active' if any([v['inventory_quantity'] for v in prod['variants']]) else 'archived',   # if any variants available
                  prod['status']  # if active - True, if archived - False
@@ -246,7 +245,7 @@ def get_new_items(partners_items_dict, our_shop_product_list):
 
     new_items_handles = handles_in_source.difference(handles_in_target)
 
-    new_items = {k: v for k, v in partners_items_dict.items() if v['handle'] in new_items_handles}
+    new_items = {k: v for k, v in partners_items_dict.items() if v['card']['item_card']['handle'] in new_items_handles}
 
     return new_items
 
@@ -262,7 +261,11 @@ def add_new_items_to_site(partners_new_items_dict, endpoint='products.json'):
 
     for cur_product in partners_new_items_dict.values():
 
-        response_product = requests.post(url + endpoint, json={'product': cur_product})
+        print()
+        print('add_new_items_to_site')
+        print(cur_product)
+
+        response_product = requests.post(url + endpoint, json={'product': cur_product['card']['item_card']})
         if response_product.ok:
             print(response_product.json()['product']['handle'], 'is created')
         else:
@@ -272,7 +275,7 @@ def add_new_items_to_site(partners_new_items_dict, endpoint='products.json'):
 
         prod_id = response_product.json()['product']['id']
 
-        for image in cur_product['images']:
+        for image in cur_product['card']['item_card']['images']:
             image_bytes, name = get_image(image)
 
             json_data = {
@@ -282,4 +285,6 @@ def add_new_items_to_site(partners_new_items_dict, endpoint='products.json'):
                 },
             }
             print('add image', requests.post(f'{url}products/{prod_id}/images.json', json=json_data))
+
+        break  # for testing we should add the one new product only
 

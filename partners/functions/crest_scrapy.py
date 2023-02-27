@@ -225,19 +225,41 @@ def get_english_description(handle):
     return new_description
 
 
-def update_items_dict(new_items):  # for another languages
+def form_options(item):
+    options = [var['options'] for var in item['variants']]
 
-    for k in new_items.keys():
+    unique_values_list = [[] for _ in range(len(options[0]))]
 
-        handle = new_items[k]['handle']
+    for lists in options:
+        for i, l in enumerate(lists):
+            if l not in unique_values_list[i]:
+                unique_values_list[i].append(l)
+
+    names = item['options']
+
+    return [{'name': name, 'values': values} for name, values in zip(names, unique_values_list)]
+
+
+def update_items_dict(items):  # for another languages
+
+    new_items = dict()
+
+    for k, v in items.items():
+
+        item = v.copy()
+
+        handle = item['card']['item_card']['handle']
         new_description = get_english_description(handle)
-        new_items[k]['description'] = new_description
-        new_items[k]['body_html'] = new_description
-        new_items[k]['status'] = 'draft'  # all new products should be added as DRAFT
-        new_items[k]['vendor'] = 'CREST'  # name of vendor
+        print(f'New description for {handle} is:')
+        print(new_description)
+        item['card']['item_card']['description'] = new_description
+        item['card']['item_card']['body_html'] = new_description
+        item['card']['item_card']['status'] = 'draft'  # all new products should be added as DRAFT
+        item['card']['item_card']['vendor'] = 'CREST'  # name of vendor
 
-        del new_items[k]['options']
+        item['card']['item_card']['options'] = form_options(item['card']['item_card'])
 
+        new_items[k] = item
 
     return new_items
 
