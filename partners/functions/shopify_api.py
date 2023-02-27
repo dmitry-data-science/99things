@@ -261,9 +261,9 @@ def add_new_items_to_site(partners_new_items_dict, endpoint='products.json'):
 
     for cur_product in partners_new_items_dict.values():
 
-        print()
-        print('add_new_items_to_site')
-        print(cur_product)
+        # print()
+        # print('add_new_items_to_site')
+        # print(cur_product)
 
         response_product = requests.post(url + endpoint, json={'product': cur_product['card']['item_card']})
         if response_product.ok:
@@ -286,5 +286,5 @@ def add_new_items_to_site(partners_new_items_dict, endpoint='products.json'):
             }
             print('add image', requests.post(f'{url}products/{prod_id}/images.json', json=json_data))
 
-        break  # for testing we should add the one new product only
+        # break  # for testing we should add the one new product only
 

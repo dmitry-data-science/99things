@@ -250,8 +250,8 @@ def update_items_dict(items):  # for another languages
 
         handle = item['card']['item_card']['handle']
         new_description = get_english_description(handle)
-        print(f'New description for {handle} is:')
-        print(new_description)
+        # print(f'New description for {handle} is:')
+        # print(new_description)
         item['card']['item_card']['description'] = new_description
         item['card']['item_card']['body_html'] = new_description
         item['card']['item_card']['status'] = 'draft'  # all new products should be added as DRAFT
