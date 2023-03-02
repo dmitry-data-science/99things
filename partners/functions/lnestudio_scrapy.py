@@ -226,11 +226,9 @@ def update_items_dict(items):  # for another languages
 
         item = v.copy()
 
-        handle = item['card']['item_card']['handle']
-        # print(f'New description for {handle} is:')
-        # print(new_description)
+        item['card']['item_card']['body_html'] = item['card']['item_card']['description']
         item['card']['item_card']['status'] = 'draft'  # all new products should be added as DRAFT
-        item['card']['item_card']['vendor'] = 'CREST'  # name of vendor
+        item['card']['item_card']['vendor'] = 'lnestudio'  # name of vendor
 
         item['card']['item_card']['options'] = form_options(item['card']['item_card'])
 
