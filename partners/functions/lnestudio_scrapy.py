@@ -1,3 +1,5 @@
+from partners.functions.scrapy_functions import form_options, fix_price_to_items_dict
+
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -109,37 +111,6 @@ def get_data_from_card(soup):
             }
 
 
-# prices has 2 additional zeros. We remove them
-def fix_price_to_items_dict(items_dict):
-    items_dict_fixed_prices = dict()
-
-    for k, v in items_dict.items():
-        v_fixed = v.copy()
-
-        if 'variants' not in v['card']['item_card'].keys():
-            print('variants is not in keys')
-            items_dict_fixed_prices[k] = v_fixed
-            continue
-
-        # fix the product prices
-        for prod_key in v['card']['item_card'].keys():
-
-            if ('price' in prod_key) & (isinstance(v_fixed['card']['item_card'][prod_key], int)):
-                v_fixed['card']['item_card'][prod_key] /= 100
-
-        # fix the variants prices
-        for i, variants in enumerate(v['card']['item_card']['variants']):
-
-            for var_key in v['card']['item_card']['variants'][i].keys():
-
-                if ('price' in var_key) & (isinstance(v_fixed['card']['item_card']['variants'][i][var_key], int)):
-                    v_fixed['card']['item_card']['variants'][i][var_key] /= 100
-
-        items_dict_fixed_prices[k] = v
-
-    return items_dict_fixed_prices
-
-
 def scrapy_main():
     items_list = get_items_list()
 
@@ -167,73 +138,5 @@ def scrapy_main():
 
     return items_dict
 
-
-# def get_redirect_name(source_handle):
-#
-#     response = requests.get(f'https://99things.eu/products/{source_handle}')
-#     soup = BeautifulSoup(response.text, parser='html')
-#
-#     new_handle = json.loads(
-#         soup.find(name='script', attrs={'type': "application/ld+json"})
-#             .decode_contents()
-#             .replace('\r', '')
-#             .replace('\n', '')
-#     )['url'].split('/')[-1]
-#
-#     return new_handle
-
-
-# def source_target_matching_for_handler(partners_items_dict, our_shop_product_list):
-#     handles_in_source = {item['card']['item_card']['handle'] for item in list(partners_items_dict.values())}
-#     handles_in_target = {prod['handle'] for prod in our_shop_product_list}
-#
-#     handles_dict = {handle: handle for handle in handles_in_source & handles_in_target}
-#     new_items_handles = list()
-#
-#     for handle in handles_in_source.difference(handles_in_target):
-#
-#         redirect_name = get_redirect_name(handle)
-#
-#         if redirect_name == '404':
-#             new_items_handles.append(handle)
-#         else:
-#             handles_dict[handle] = redirect_name
-#
-#     handles_dict = {v: k for k, v in handles_dict.items()}
-
-
-
-def form_options(item):
-    options = [var['options'] for var in item['variants']]
-
-    unique_values_list = [[] for _ in range(len(options[0]))]
-
-    for lists in options:
-        for i, l in enumerate(lists):
-            if l not in unique_values_list[i]:
-                unique_values_list[i].append(l)
-
-    names = item['options']
-
-    return [{'name': name, 'values': values} for name, values in zip(names, unique_values_list)]
-
-
-def update_items_dict(items):  # for another languages
-
-    new_items = dict()
-
-    for k, v in items.items():
-
-        item = v.copy()
-
-        item['card']['item_card']['body_html'] = item['card']['item_card']['description']
-        item['card']['item_card']['status'] = 'draft'  # all new products should be added as DRAFT
-        item['card']['item_card']['vendor'] = 'lnestudio'  # name of vendor
-
-        item['card']['item_card']['options'] = form_options(item['card']['item_card'])
-
-        new_items[k] = item
-
-    return new_items
 
 

@@ -1,5 +1,8 @@
-from partners.functions.lnestudio_scrapy import scrapy_main, update_items_dict
+from partners.functions.lnestudio_scrapy import scrapy_main
+
+from partners.functions.scrapy_functions import update_items_dict
 from partners.functions.shopify_api import *
+
 
 vendor = 'lnestudio'
 

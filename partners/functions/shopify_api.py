@@ -286,5 +286,5 @@ def add_new_items_to_site(partners_new_items_dict, endpoint='products.json'):
             }
             print('add image', requests.post(f'{url}products/{prod_id}/images.json', json=json_data))
 
-        # break  # for testing we should add the one new product only
+        break  # for testing we should add the one new product only
 
