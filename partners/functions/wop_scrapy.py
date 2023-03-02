@@ -173,7 +173,7 @@ def scrapy_main():
         items_dict[i] = {
             'href': get_href_for_card(item),
             'title': get_title(item),
-            'in_stock': is_in_stock(item),
+            # 'in_stock': is_in_stock(item),
             'old_price': get_old_price(item),
             'price': get_new_price(item),
             'card': get_data_from_card(

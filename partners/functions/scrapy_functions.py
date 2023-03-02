@@ -19,7 +19,7 @@ def form_options(item):
     return [{'name': name, 'values': values} for name, values in zip(names, unique_values_list)]
 
 
-def update_items_dict(items, dns_for_selenium=None):  # for another languages
+def update_items_dict(items, vendor, dns_for_selenium=None):  # for another languages
 
     new_items = dict()
 
@@ -29,16 +29,19 @@ def update_items_dict(items, dns_for_selenium=None):  # for another languages
 
         if dns_for_selenium:
             handle = item['card']['item_card']['handle']
-            new_description = get_english_description(handle, dns_for_selenium)
+            new_description, new_title = get_english(handle, dns_for_selenium)
             # print(f'New description for {handle} is:')
             # print(new_description)
+            item['card']['item_card']['title'] = new_title
             item['card']['item_card']['description'] = new_description
 
         item['card']['item_card']['body_html'] = item['card']['item_card']['description']
         item['card']['item_card']['status'] = 'draft'  # all new products should be added as DRAFT
-        item['card']['item_card']['vendor'] = 'lnestudio'  # name of vendor
+        item['card']['item_card']['vendor'] = vendor  # name of vendor
 
         item['card']['item_card']['options'] = form_options(item['card']['item_card'])
+
+        del item['card']['item_card']['tags']  # delete tags
 
         new_items[k] = item
 
@@ -85,13 +88,14 @@ def get_options():
     options.add_argument('--disable-blink-features=AutomationControlled')
     # options.headless = True
     # options.add_argument('--headless')
+    options.add_argument("accept-language=en-US")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
     return options
 
 
-def get_english_description(handle, dns):
+def get_english(handle, dns):
     new_description = str()
 
     try:
@@ -104,9 +108,9 @@ def get_english_description(handle, dns):
         source = browser.page_source
 
         soup = BeautifulSoup(source, 'html.parser')
-        item_card = soup.find(name='div', attrs={'class', 'product-single__meta'})
-        new_description = item_card.find(name='div', attrs={'class': 'product-single__description'}).decode_contents()
-
+        # item_card = soup.find(name='div', attrs={'class', 'product-single__meta'})
+        new_description = soup.find(name='div', attrs={'class': 'product__description'}).decode_contents()
+        new_title = soup.find(name='h1', attrs={'class': 'product__title'}).decode_contents()
 
     except:
         print(f'selenium error with {handle}')
@@ -115,5 +119,5 @@ def get_english_description(handle, dns):
         browser.close()
         print('Browser is closed')
 
-    return new_description
+    return new_description, new_title
 
