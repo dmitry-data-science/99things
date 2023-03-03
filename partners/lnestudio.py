@@ -11,8 +11,8 @@ def update_lnestudio():
     partners_items_dict = scrapy_main()
     our_shop_product_list = get_prod_list(vendor)
 
-    print(partners_items_dict)
-    print(our_shop_product_list)
+    # print(partners_items_dict)
+    # print(our_shop_product_list)
 
     # add new product
     new_items = get_new_items(partners_items_dict, our_shop_product_list)
