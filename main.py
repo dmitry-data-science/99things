@@ -8,5 +8,6 @@ print(f'result for CREST: {result_crest}')
 result_lnestudio = update_lnestudio()
 print(f'result for lnestudio: {result_lnestudio}')
 
-# result_wop = update_wop()
-# print(f'result for wop: {result_wop}')
+result_wop = update_wop()
+print(f'result for wop: {result_wop}')
+

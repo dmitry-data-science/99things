@@ -128,7 +128,7 @@ def update_variants_quantity(variants_dict,
     for inv_id in variants_dict.keys():
 
         available = get_inventory_level(inv_id)[0]['available'] or 0
-        time.sleep(0.5)
+        time.sleep(1)
         desired_value = available_variant_quantity if variants_dict[inv_id]['s_available'] else 0
 
         quantity_diff = desired_value - available
