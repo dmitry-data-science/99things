@@ -13,7 +13,8 @@ def update_crest():
 
     # add new product
     new_items = get_new_items(partners_items_dict, our_shop_product_list)
-    partners_new_items_dict = update_items_dict(new_items, vendor, dns_for_selenium='https://crestclothing.com')
+    # partners_new_items_dict = update_items_dict(new_items, vendor, dns_for_selenium='https://crestclothing.com')
+    partners_new_items_dict = update_items_dict(new_items, vendor)
     add_new_items_to_site(partners_new_items_dict)
 
     # update our product list
